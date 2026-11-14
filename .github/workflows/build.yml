@@ -21,6 +21,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           
+      - name: Install Android SDK and Build-Tools explicitly
+        run: |
+          echo "y" | sudo /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.2" "platforms;android-33" "platform-tools"
+          
       - name: Install system dependencies
         run: |
           sudo apt-get update
