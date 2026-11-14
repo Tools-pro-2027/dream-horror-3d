@@ -5,54 +5,91 @@ import threading
 
 app = Ursina()
 
-# إعدادات النافذة والجو السينمائي المرعب ثلاثي الأبعاد
-window.title = "Dream Horror: 3D Third Person Style"
+# --- إعدادات النافذة والجو المرعب ---
+window.title = "Dream Horror: The Awakening"
 window.borderless = False
 window.fullscreen = True
-window.exit_button.visible = False
 window.color = color.black
 
-# بناء عالم القصر أو الممر المرعب (3D Environment)
-floor = Entity(model='plane', scale=(60, 1, 60), color=color.dark_gray, texture='white_cube')
-roof = Entity(model='plane', position=(0, 5, 0), scale=(60, 1, 60), color=color.black)
+# متغيرات اللعبة والشخصية
+player_name = "Player"
+player_color = color.cyan
+game_started = False
 
-# جدران المتاهة المرعبة
-wall_left = Entity(model='cube', position=(-30, 2.5, 0), scale=(1, 5, 60), color=color.rgb(20, 20, 20))
-wall_right = Entity(model='cube', position=(30, 2.5, 0), scale=(1, 5, 60), color=color.rgb(20, 20, 20))
-wall_back = Entity(model='cube', position=(0, 2.5, 30), scale=(60, 5, 1), color=color.rgb(20, 20, 20))
+# --- واجهة البداية (إدخال الاسم وتخصيص الشخصية) ---
+def start_game():
+    global player_name, player_color, game_started
+    player_name = name_input.text if name_input.text else "Survivor"
+    
+    # إخفاء قائمة البداية
+    menu_entity.enabled = False
+    game_started = True
+    
+    # تفعيل اللاعب والبيئة المرعبة
+    player.enabled = True
+    cursor.enabled = True
+    print(f"Game started by: {player_name}")
 
-# تحكم اللاعب (منظور ثلاثي احترافي)
-player = FirstPersonController()
-player.x = 0
+# شاشة القائمة الرئيسية (تصميم روبلوكس مصغر)
+menu_entity = Entity()
+
+title_text = Text(text="DREAM HORROR: THE AWAKENING", origin=(0,0), y=0.3, scale=2, color=color.red, parent=menu_entity)
+sub_text = Text(text="Nightmare Prison Edition", origin=(0,0), y=0.2, scale=1, color=color.light_gray, parent=menu_entity)
+
+name_input = InputField(default_value="Player1", y=0.0, scale=(0.4, 0.08), origin=(0,0), parent=menu_entity)
+
+# أزرار تخصيص لون الشخصية (ستايل روبلوكس)
+def set_color_red():
+    global player_color
+    player_color = color.red
+    avatar_preview.color = player_color
+
+def set_color_cyan():
+    global player_color
+    player_color = color.cyan
+    avatar_preview.color = player_color
+
+def set_color_green():
+    global player_color
+    player_color = color.green
+    avatar_preview.color = player_color
+
+btn_red = Button(text="Red", color=color.dark_red, scale=(0.12, 0.06), position=(-0.15, -0.15), parent=menu_entity, on_click=set_color_red)
+btn_cyan = Button(text="Cyan", color=color.dark_cyan, scale=(0.12, 0.06), position=(0.0, -0.15), parent=menu_entity, on_click=set_color_cyan)
+btn_green = Button(text="Green", color=color.dark_green, scale=(0.12, 0.06), position=(0.15, -0.15), parent=menu_entity, on_click=set_color_green)
+
+# معاينة الشخصية
+avatar_preview = Entity(model='cube', color=player_color, scale=(0.8, 1.5, 0.5), position=(0, -0.3, 0), parent=menu_entity)
+
+start_btn = Button(text="ENTER NIGHTMARE", color=color.red, scale=(0.4, 0.08), y=-0.4, parent=menu_entity, on_click=start_game)
+
+
+# --- بيئة اللعب (سجن الكوابيس الثلاثي الأبعاد) ---
+player = FirstPersonController(enabled=False)
 player.y = 2
-player.z = 0
-player.speed = 10
-player.cursor.visible = True
+player.speed = 6
 
-# إضافة عنصر رعب متحرك داخل الممر
-enemy = Entity(model='cube', color=color.red, scale=(1.5, 3, 1.5), position=(0, 1.5, 20))
+# أرضية السجن
+floor = Entity(model='plane', scale=(50, 1, 50), color=color.dark_gray, texture='white_cube')
 
-def update():
-    # حركة بسيطة للرعب تقترب من اللاعب
-    if distance(player.position, enemy.position) < 25:
-        enemy.look_at(player.position)
-        enemy.z -= 2 * time.dt
+# جدران الزنزانة المرعبة
+wall1 = Entity(model='cube', position=(0, 5, 25), scale=(50, 10, 1), color=color.black)
+wall2 = Entity(model='cube', position=(-25, 5, 0), scale=(1, 10, 50), color=color.black)
+wall3 = Entity(model='cube', position=(25, 5, 0), scale=(1, 10, 50), color=color.black)
 
-# واجهة النصوص على الشاشة
-info_text = Text(text="[ممر الأبعاد الثلاثية - تجنب الكابوس]", position=(-0.8, 0.45), scale=1.3, color=color.rgb(220, 0, 0))
+# مسدس الضوء (Light Gun) المرتبط باللاعب
+gun = Entity(model='cube', parent=camera, position=(0.5, -0.3, 1), scale=(0.3, 0.3, 1), color=color.yellow)
 
-# سيرفر الشبكة المحلية للاعبين عبر نقطة الاتصال (LAN Hotspot)
-def start_lan_server():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('0.0.0.0', 5000))
-        s.listen(2)
-        while True:
-            conn, addr = s.accept()
-            conn.close()
-    except:
-        pass
+# شعاع الضوء للقضاء على الأشباح
+def shoot_light():
+    if not game_started:
+        return
+    gun.color = color.white
+    invoke(setattr, gun, 'color', color.yellow, delay=0.1)
+    print("Light ray shot fired against nightmares!")
 
-threading.Thread(target=start_lan_server, daemon=True).start()
+def input(key):
+    if key == 'left mouse down' or key == 'space':
+        shoot_light()
 
 app.run()
