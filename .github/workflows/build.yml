@@ -17,6 +17,7 @@ jobs:
           
       - name: Install system dependencies
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y \
             git \
@@ -35,7 +36,11 @@ jobs:
             libsdl2-mixer-dev \
             libsdl2-ttf-dev \
             libffi-dev \
-            libssl-dev
+            libssl-dev \
+            ant \
+            build-essential \
+            libstdc++6:i386 \
+            libz1:i386
             
       - name: Install Python dependencies
         run: |
