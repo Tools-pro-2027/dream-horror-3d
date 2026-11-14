@@ -21,12 +21,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          build-tools-version: 33.0.2
-          sdk-version: 33
-          
       - name: Install system dependencies
         run: |
           sudo apt-get update
